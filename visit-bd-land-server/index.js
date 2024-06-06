@@ -91,11 +91,11 @@ async function run() {
          
           })
       
-          // app.post('/', async(req, res)=>{
-          //     const wlistData = req.body;
-          //     const result = await WishlistData.insertOne(wlistData)
-          //     res.send(result)
-          //   })
+          app.post('/review', async(req, res)=>{
+              const reviewData = req.body;
+              const result = await UserReviewData.insertOne(wlistData)
+              res.send(result)
+            })
       
 
  

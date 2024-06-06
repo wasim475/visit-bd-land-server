@@ -93,7 +93,7 @@ async function run() {
       
           app.post('/review', async(req, res)=>{
               const reviewData = req.body;
-              const result = await UserReviewData.insertOne(wlistData)
+              const result = await UserReviewData.insertOne(reviewData)
               res.send(result)
             })
       

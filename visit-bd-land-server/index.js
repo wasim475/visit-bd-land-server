@@ -34,9 +34,22 @@ async function run() {
   try {
 
     const packData = client.db('packDataDB').collection('packages')
+    const bookingData = client.db('BookingDB').collection('bookings')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
 
+    app.get('/bookings', async(req, res)=>{
+      const cursor = bookingData.find()
+      const result = await cursor.toArray()
+      res.send(result)
+   
+    })
+
+    app.post('/bookings', async(req, res)=>{
+        const bookgData = req.body;
+        const result = await bookingData.insertOne(bookgData)
+        res.send(result)
+      })
     app.get('/packages', async(req, res)=>{
       const cursor = packData.find()
       const result = await cursor.toArray()

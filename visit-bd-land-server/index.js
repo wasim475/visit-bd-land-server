@@ -35,6 +35,7 @@ async function run() {
 
     const packData = client.db('packDataDB').collection('packages')
     const bookingData = client.db('BookingDB').collection('bookings')
+    const WishlistData = client.db('wishlistDB').collection('wishlist')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
 
@@ -60,6 +61,18 @@ async function run() {
     app.post('/packages', async(req, res)=>{
         const packagesData = req.body;
         const result = await packData.insertOne(packagesData)
+        res.send(result)
+      })
+    app.get('/wishlist', async(req, res)=>{
+      const cursor = WishlistData.find()
+      const result = await cursor.toArray()
+      res.send(result)
+   
+    })
+
+    app.post('/wishlist', async(req, res)=>{
+        const wlistData = req.body;
+        const result = await WishlistData.insertOne(wlistData)
         res.send(result)
       })
 

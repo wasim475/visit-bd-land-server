@@ -36,6 +36,7 @@ async function run() {
     const packData = client.db('packDataDB').collection('packages')
     const bookingData = client.db('BookingDB').collection('bookings')
     const WishlistData = client.db('wishlistDB').collection('wishlist')
+    const UserReviewData = client.db('UserReviewDB').collection('userReview')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
 
@@ -82,6 +83,20 @@ async function run() {
             const result = await WishlistData.deleteOne(query)
             res.send(result)
           })
+
+          app.get('/review', async(req, res)=>{
+            const cursor = UserReviewData.find()
+            const result = await cursor.toArray()
+            res.send(result)
+         
+          })
+      
+          // app.post('/', async(req, res)=>{
+          //     const wlistData = req.body;
+          //     const result = await WishlistData.insertOne(wlistData)
+          //     res.send(result)
+          //   })
+      
 
  
 

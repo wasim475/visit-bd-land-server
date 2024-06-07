@@ -53,6 +53,15 @@ async function run() {
         const result = await bookingData.insertOne(bookgData)
         res.send(result)
       })
+
+      app.delete('/wishlist/:id',async(req, res)=>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)}
+        const result = await WishlistData.deleteOne(query)
+        res.send(result)
+      })
+
+
     app.get('/packages', async(req, res)=>{
       const cursor = packData.find()
       const result = await cursor.toArray()

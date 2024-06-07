@@ -54,10 +54,10 @@ async function run() {
         res.send(result)
       })
 
-      app.delete('/wishlist/:id',async(req, res)=>{
+      app.delete('/bookings/:id',async(req, res)=>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
-        const result = await WishlistData.deleteOne(query)
+        const result = await bookingData.deleteOne(query)
         res.send(result)
       })
 

@@ -37,6 +37,7 @@ async function run() {
     const bookingData = client.db('BookingDB').collection('bookings')
     const WishlistData = client.db('wishlistDB').collection('wishlist')
     const UserReviewData = client.db('UserReviewDB').collection('userReview')
+    const UserStoryData = client.db('UserStoryDB').collection('userStory')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
 
@@ -96,6 +97,19 @@ async function run() {
               const result = await UserReviewData.insertOne(reviewData)
               res.send(result)
             })
+
+            app.get('/stories', async(req, res)=>{
+              const cursor = UserStoryData.find()
+              const result = await cursor.toArray()
+              res.send(result)
+           
+            })
+        
+            // app.post('/bookings', async(req, res)=>{
+            //     const bookgData = req.body;
+            //     const result = await bookingData.insertOne(bookgData)
+            //     res.send(result)
+            //   })
       
 
  

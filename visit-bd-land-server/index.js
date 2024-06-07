@@ -105,11 +105,11 @@ async function run() {
            
             })
         
-            // app.post('/bookings', async(req, res)=>{
-            //     const bookgData = req.body;
-            //     const result = await bookingData.insertOne(bookgData)
-            //     res.send(result)
-            //   })
+            app.post('/stories', async(req, res)=>{
+                const storyData = req.body;
+                const result = await UserStoryData.insertOne(storyData)
+                res.send(result)
+              })
       
 
  

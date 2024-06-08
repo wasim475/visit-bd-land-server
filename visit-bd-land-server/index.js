@@ -38,6 +38,7 @@ async function run() {
     const WishlistData = client.db('wishlistDB').collection('wishlist')
     const UserReviewData = client.db('UserReviewDB').collection('userReview')
     const UserStoryData = client.db('UserStoryDB').collection('userStory')
+    const UserCollection = client.db('UserListDB').collection('userList')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
 

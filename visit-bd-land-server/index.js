@@ -164,7 +164,7 @@ async function run() {
                   const query = {_id: new ObjectId(id)}
                   const updateDoc = {
                     $set: {
-                      role: "admin",
+                      role: "guest",
                     }
                   }
                   const result = await UserCollection.updateOne(query, updateDoc);

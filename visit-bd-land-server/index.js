@@ -147,6 +147,20 @@ async function run() {
                   res.send(result)
                 })
 
+                app.patch('/users/admin/:id',async(req, res)=>{
+                  const id = req.params.id;
+                  const query = {_id: new ObjectId(id)}
+                  const updateDoc = {
+                    $set: {
+                      role: "admin",
+                    }
+                  }
+                  const result = await UserCollection.updateOne(query, updateDoc);
+                  res.send(result)
+                })
+
+
+
  
 
 //     app.get('/userChoice', async (req, res) => {

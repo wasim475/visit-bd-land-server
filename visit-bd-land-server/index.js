@@ -40,9 +40,18 @@ async function run() {
     const UserReviewData = client.db('UserReviewDB').collection('userReview')
     const UserStoryData = client.db('UserStoryDB').collection('userStory')
     const UserCollection = client.db('UserListDB').collection('userList')
+    const jwtTokenCollection = client.db('jwtTokenDB').collection('jwtTokenList')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
   
+    // Jwt
+    app.post('/jwt', async(req, res)=>{
+      const jwtUser = req.body;
+      const token = jwt.sign(jwtUser, process.env.access_token, {
+        expiresIn:'1h'
+      });
+      res.send({token})
+    })
     app.get('/bookings', async(req, res)=>{
       const cursor = bookingData.find()
       const result = await cursor.toArray()

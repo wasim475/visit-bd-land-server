@@ -41,7 +41,7 @@ async function run() {
     const UserCollection = client.db('UserListDB').collection('userList')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
-
+  
     app.get('/bookings', async(req, res)=>{
       const cursor = bookingData.find()
       const result = await cursor.toArray()
@@ -121,6 +121,19 @@ async function run() {
                 res.send(result)
               })
       
+
+              app.get('/users', async(req, res)=>{
+                const cursor = UserCollection.find()
+                const result = await cursor.toArray()
+                res.send(result)
+             
+              })
+          
+              app.post('/users', async(req, res)=>{
+                  const userData = req.body;
+                  const result = await UserCollection.insertOne(userData)
+                  res.send(result)
+                })
 
  
 

@@ -7,17 +7,29 @@ const app = express()
 const port = process.env.PORT || 3000
 
 
-const corsOptions = {
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS" ],
-  allowedHeaders:["Content-Type"]
-};
+
+// const corsOptions = {
+//   origin: "*",
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS" ],
+//   allowedHeaders:["Content-Type"]
+// };
+
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "https://visit-bd-land-server.vercel.app",
+//       // "https://cardoctor-bd.firebaseapp.com",
+//     ]
+//   })
+// );
+app.use(cors())
 
 
-
-app.use(cors(corsOptions));
-app.options("*",cors(corsOptions))
+// app.use(cors(corsOptions));
+// app.options("*",cors(corsOptions))
 app.use(express.json())
+// app.use(cors());
 
 
 const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@cluster0.r95emnj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -40,18 +52,54 @@ async function run() {
     const UserReviewData = client.db('UserReviewDB').collection('userReview')
     const UserStoryData = client.db('UserStoryDB').collection('userStory')
     const UserCollection = client.db('UserListDB').collection('userList')
-    const jwtTokenCollection = client.db('jwtTokenDB').collection('jwtTokenList')
+    // const jwtTokenCollection = client.db('jwtTokenDB').collection('jwtTokenList')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
   
+    //Admin
+    
     // Jwt
+  
     app.post('/jwt', async(req, res)=>{
-      const jwtUser = req.body;
-      const token = jwt.sign(jwtUser, process.env.access_token, {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn:'1h'
       });
       res.send({token})
     })
+
+    const verifyToken = (req, res, next) => {
+      // console.log('inside verify token', req.headers.authorization);
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'No token provided' });
+      }
+      
+      const token = req.headers.authorization.split(' ')[1];
+      if (!token) {
+        return res.status(401).send({ message: 'Malformed token' });
+      }
+
+      const verifyAdmin = async (req,res,next)=>{
+        const email = req.decoded.email;
+        const query = {email: email};
+        const user = await UserCollection.findOne(query);
+        const izAdmin = user?.role=== 'admin';
+        if(!izAdmin){
+          return res.status(403).send({ message: 'forbidden token' });
+        }
+        next()
+      }
+    
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'Invalid token' });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
+    
+
     app.get('/bookings', async(req, res)=>{
       const cursor = bookingData.find()
       const result = await cursor.toArray()
@@ -131,20 +179,36 @@ async function run() {
                 res.send(result)
               })
       
-
-              app.get('/users', async(req, res)=>{
-                const cursor = UserCollection.find()
-                const result = await cursor.toArray()
-                res.send(result)
-             
-              })
+              // verifyToken
+              app.get('/users', verifyToken, async (req, res) => {
+                const page = parseInt(req.query.page) || 0; // Default to 0 if not provided
+                const limit = parseInt(req.query.limit) || 10; // Default to 10 if not provided
+            
+                try {
+                    const cursor = UserCollection.find()
+                        .skip(page * limit) // Skip the number of documents based on the page
+                        .limit(limit); // Limit the number of documents
+            
+                    const result = await cursor.toArray();
+                    const totalCount = await UserCollection.countDocuments(); // Get the total count of documents
+            
+                    res.send({
+                        users: result,
+                        totalCount: totalCount
+                    });
+                } catch (error) {
+                    console.error("Error fetching users:", error);
+                    res.status(500).send("Internal Server Error");
+                }
+            });
+            
           
               app.post('/users', async(req, res)=>{
                   const userData = req.body;
                   const query = {email: userData.email}
                   const existingUser = await UserCollection.findOne(query)
                   if(existingUser){
-                    return res.send({message: 'user already exist.', insertedId: null})
+                    return res.send({message: 'user already exist', insertedId: null})
                   }
                   const result = await UserCollection.insertOne(userData)
                   res.send(result)
@@ -180,10 +244,38 @@ async function run() {
                   const result = await UserCollection.updateOne(query, updateDoc);
                   res.send(result)
                 })
+                // verifyToken
+                app.get('/users/admin/:email',verifyToken, async(req,res)=>{
+                  const email = req.params.email;
+                  if(email !== req.decoded.email){
+                    return res.status(403).send({message: "unauthorized access"})
+                  }
+                  const query = {email:email};
+                  const user = await UserCollection.findOne(query);
+                  let admin = false;
+                  if(user){
+                    admin = user?.role=== 'admin'
+                  }
+                  res.send({admin})
+              })
+              // verifyToken
+              app.get('users/guest/:email',verifyToken, async(req,res)=>{
+                  const email = req.params.email;
+                  if(email !== req.decoded.email){
+                    return res.status(403).send({message: "unauthorized access"})
+                  }
+                  const query = {email:email};
+                  const user = await UserCollection.findOne(query);
+                  let isGuest = false;
+                  if(user){
+                    isGuest = user?.role=== 'guest'
+                  }
+                  res.send({isGuest})
+              })
 
 
 
- 
+
 
 //     app.get('/userChoice', async (req, res) => {
 //       const cursor = GalleryDataCollection.find();

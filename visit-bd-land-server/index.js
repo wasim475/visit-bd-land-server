@@ -181,16 +181,16 @@ async function run() {
       
               // verifyToken
               app.get('/users', verifyToken, async (req, res) => {
-                const page = parseInt(req.query.page) || 0; // Default to 0 if not provided
-                const limit = parseInt(req.query.limit) || 10; // Default to 10 if not provided
+                const page = parseInt(req.query.page) || 0; 
+                const limit = parseInt(req.query.limit) || 10; 
             
                 try {
                     const cursor = UserCollection.find()
-                        .skip(page * limit) // Skip the number of documents based on the page
-                        .limit(limit); // Limit the number of documents
+                        .skip(page * limit) 
+                        .limit(limit); 
             
                     const result = await cursor.toArray();
-                    const totalCount = await UserCollection.countDocuments(); // Get the total count of documents
+                    const totalCount = await UserCollection.countDocuments();
             
                     res.send({
                         users: result,

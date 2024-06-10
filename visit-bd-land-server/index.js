@@ -52,7 +52,7 @@ async function run() {
     const UserReviewData = client.db('UserReviewDB').collection('userReview')
     const UserStoryData = client.db('UserStoryDB').collection('userStory')
     const UserCollection = client.db('UserListDB').collection('userList')
-    // const jwtTokenCollection = client.db('jwtTokenDB').collection('jwtTokenList')
+    const guideDataCollection = client.db('GuidesDB').collection('GuidesList')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
   
@@ -79,15 +79,15 @@ async function run() {
         return res.status(401).send({ message: 'Malformed token' });
       }
 
-      const verifyAdmin = async (req,res,next)=>{
+      const verifyAdmin = async (req, res, next) => {
         const email = req.decoded.email;
-        const query = {email: email};
-        const user = await UserCollection.findOne(query);
-        const izAdmin = user?.role=== 'admin';
-        if(!izAdmin){
-          return res.status(403).send({ message: 'forbidden token' });
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const isAdmin = user?.role === 'admin';
+        if (!isAdmin) {
+          return res.status(403).send({ message: 'forbidden access' });
         }
-        next()
+        next();
       }
     
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
@@ -113,12 +113,49 @@ async function run() {
         res.send(result)
       })
 
+    app.post('/guides', async(req, res)=>{
+        const guideData = req.body;
+        const result = await guideDataCollection.insertOne(guideData)
+        res.send(result)
+      })
+
+      app.get('/guides', async(req, res)=>{
+        const cursor = guideDataCollection.find()
+        const result = await cursor.toArray()
+        res.send(result)
+     
+      })
+
       app.delete('/bookings/:id',async(req, res)=>{
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
         const result = await bookingData.deleteOne(query)
         res.send(result)
       })
+
+      app.put('/bookings/:id', async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateBookingsInfo = req.body;
+        const upBookData = {
+          $set: {
+            status: updateBookingsInfo.status, // Assuming status is directly in req.body
+          }
+        };
+    
+        try {
+          const result = await bookingData.updateOne(filter, upBookData, options);
+          if (result.modifiedCount > 0) {
+            res.send({ message: 'Booking status updated successfully' });
+          } else {
+            res.send({ message: 'No booking found with this id or no changes made' });
+          }
+        } catch (error) {
+          console.error('Error updating booking status', error);
+          res.status(500).send({ message: 'Internal server error' });
+        }
+      });
 
 
     app.get('/packages', async(req, res)=>{
@@ -180,7 +217,7 @@ async function run() {
               })
       
               // verifyToken
-              app.get('/users', verifyToken, async (req, res) => {
+              app.get('/users', async (req, res) => {
                 const page = parseInt(req.query.page) || 0; 
                 const limit = parseInt(req.query.limit) || 10; 
             
@@ -221,6 +258,31 @@ async function run() {
                   res.send(result)
                 })
 
+                
+                app.put('/users/:email', async (req, res) => {
+                  const email = req.params.email;
+                  const updatedData = req.body;
+                
+                  try {
+                    const filter = { email: email };
+                    const updateDoc = {
+                      $set: updatedData,
+                    };
+                
+                    const result = await UserCollection.updateOne(filter, updateDoc);
+                
+                    if (result.modifiedCount > 0) {
+                      res.status(200).json({ message: 'User updated successfully' });
+                    } else {
+                      res.status(404).json({ message: 'User not found' });
+                    }
+                  } catch (error) {
+                    console.error('Error updating user:', error);
+                    res.status(500).json({ message: 'Internal Server Error' });
+                  }
+                });
+                
+
                 app.patch('/users/admin/:id',async(req, res)=>{
                   const id = req.params.id;
                   const query = {_id: new ObjectId(id)}
@@ -259,7 +321,7 @@ async function run() {
                   res.send({admin})
               })
               // verifyToken
-              app.get('users/guest/:email',verifyToken, async(req,res)=>{
+              app.get('/users/guest/:email',verifyToken, async(req,res)=>{
                   const email = req.params.email;
                   if(email !== req.decoded.email){
                     return res.status(403).send({message: "unauthorized access"})
@@ -309,27 +371,27 @@ async function run() {
 //       res.send(result);
 //   })
 
-//   app.put('/foods/:id', async (req, res) => {
-//       const id = req.params.id;
-//       const filter = { _id: new ObjectId(id) }
-//       const options= {upsert: true}
-//       const updateFoodInfo = req.body
-//       const upFoodData ={
-//         $set:{
-//           FoodName:updateFoodInfo.FoodName,
-//           FoodCategory:updateFoodInfo.FoodCategory,
-//           shortDescription:updateFoodInfo.shortDescription, 
-//           price:updateFoodInfo.price, 
-//           countryName:updateFoodInfo.countryName, 
-//           quantity:updateFoodInfo.quantity, 
-//           userEmail:updateFoodInfo.userEmail, 
-//           userName:updateFoodInfo.userName, 
-//           photoUrl: updateFoodInfo.photoUrl
-//         }
-//       }
-//       const result = await UserFoodDataCollection.updateOne(filter, upFoodData);
-//       res.send(result);
-//   })
+  // app.put('/foods/:id', async (req, res) => {
+  //     const id = req.params.id;
+  //     const filter = { _id: new ObjectId(id) }
+  //     const options= {upsert: true}
+  //     const updateFoodInfo = req.body
+  //     const upFoodData ={
+  //       $set:{
+  //         FoodName:updateFoodInfo.FoodName,
+  //         FoodCategory:updateFoodInfo.FoodCategory,
+  //         shortDescription:updateFoodInfo.shortDescription, 
+  //         price:updateFoodInfo.price, 
+  //         countryName:updateFoodInfo.countryName, 
+  //         quantity:updateFoodInfo.quantity, 
+  //         userEmail:updateFoodInfo.userEmail, 
+  //         userName:updateFoodInfo.userName, 
+  //         photoUrl: updateFoodInfo.photoUrl
+  //       }
+  //     }
+  //     const result = await UserFoodDataCollection.updateOne(filter, upFoodData);
+  //     res.send(result);
+  // })
 
 
   

@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_CODE);
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const app = express()
@@ -53,6 +54,7 @@ async function run() {
     const UserStoryData = client.db('UserStoryDB').collection('userStory')
     const UserCollection = client.db('UserListDB').collection('userList')
     const guideDataCollection = client.db('GuidesDB').collection('GuidesList')
+    const paymentCollection = client.db('PaymentsDB').collection('Payments')
     // const GalleryDataCollection = client.db('galleryDataDB').collection('userChoice')
     // const PurchasesDataCollection = client.db('purchaseDataDB').collection('purchase')
   
@@ -334,6 +336,51 @@ async function run() {
                   }
                   res.send({isGuest})
               })
+
+
+              app.post('/create-payment-intent', async (req, res) => {
+                const { price } = req.body;
+                const amount = parseInt(price * 100);
+                console.log(amount, 'amount inside the intent')
+          
+                const paymentIntent = await stripe.paymentIntents.create({
+                  amount: amount,
+                  currency: 'usd',
+                  payment_method_types: ['card']
+                });
+          
+                res.send({
+                  clientSecret: paymentIntent.client_secret
+                })
+              });
+          
+          
+              app.get('/payments/:email', verifyToken, async (req, res) => {
+                const query = { email: req.params.email }
+                if (req.params.email !== req.decoded.email) {
+                  return res.status(403).send({ message: 'forbidden access' });
+                }
+                const result = await paymentCollection.find(query).toArray();
+                res.send(result);
+              })
+          
+              app.post('/payments', async (req, res) => {
+                const payment = req.body;
+                const paymentResult = await paymentCollection.insertOne(payment);
+          
+                //  carefully delete each item from the cart
+                console.log('payment info', payment);
+                const query = {
+                  _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                  }
+                };
+          
+                const deleteResult = await cartCollection.deleteMany(query);
+          
+                res.send({ paymentResult, deleteResult });
+              })
+          
 
 
 
